@@ -11,6 +11,7 @@ mod asset;
 mod cli;
 mod controllers;
 mod db;
+mod fairings;
 
 fn main() -> Result<(), ExitFailure> {
     let args = cli::Args::get_from_clap()?;
@@ -25,9 +26,11 @@ fn main() -> Result<(), ExitFailure> {
     let config = Config::build(Environment::active()?)
         .address(args.bind_ip)
         .port(args.port)
+        .extra("databases", db::make_rocket_database_config(&args.db_path))
         .finalize()?;
 
     rocket::custom(config)
+        .attach(fairings::Database::fairing())
         .mount("/", asset::Asset)
         .mount("/", routes![controllers::index::index])
         .launch();
