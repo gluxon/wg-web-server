@@ -2,9 +2,9 @@
 // trait that transforms the asset struct into a vector of routes that can be mounted anywhere.
 // This should be submitted as a pull request into rust_embed directly at some point in future.
 
-use rocket::{Request, Response, Route, Data};
 use rocket::handler::Outcome;
 use rocket::http::{ContentType, Method, Status};
+use rocket::{Data, Request, Response, Route};
 use rust_embed::RustEmbed;
 use std::ffi::OsStr;
 use std::io::Cursor;
@@ -40,8 +40,8 @@ fn handler<'r>(request: &'r Request, _data: Data) -> Outcome<'r> {
             }
 
             Outcome::from(request, response.finalize())
-        },
-        None => Outcome::failure(Status::NotFound)
+        }
+        None => Outcome::failure(Status::NotFound),
     }
 }
 
@@ -51,7 +51,7 @@ impl From<Asset> for Vec<Route> {
         // cleanest way to do this. This can probably be done better inside the rust_embed library
         // itself once this file becomes a pull request.
         Asset::iter()
-            .map(|path| { Route::new(Method::Get, format!("/{}", path), handler) })
+            .map(|path| Route::new(Method::Get, format!("/{}", path), handler))
             .collect()
     }
 }

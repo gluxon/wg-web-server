@@ -1,5 +1,5 @@
-use rocket::get;
 use askama::Template;
+use rocket::get;
 
 #[derive(Template)]
 #[template(path = "index.html")]

@@ -1,11 +1,12 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
 use exitfailure::ExitFailure;
-use rocket::routes;
 use rocket::config::{Config, Environment};
+use rocket::routes;
 
 // https://github.com/diesel-rs/diesel/issues/1894#issuecomment-433178841
-#[macro_use] extern crate diesel_migrations;
+#[macro_use]
+extern crate diesel_migrations;
 
 mod asset;
 mod cli;

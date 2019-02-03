@@ -1,8 +1,8 @@
-use std::collections::HashMap;
-use diesel::SqliteConnection;
 use diesel::connection::Connection;
-use failure::{Error, format_err};
+use diesel::SqliteConnection;
+use failure::{format_err, Error};
 use rocket::config::Value;
+use std::collections::HashMap;
 
 // It'd be better to do "use diesel_migrations::embed_migrations" to be in line with the Rust 2018
 // module changes, but something about this macro requires it to be imported using the old method
@@ -12,8 +12,7 @@ use rocket::config::Value;
 embed_migrations!();
 
 fn connect(path: &str) -> Result<SqliteConnection, Error> {
-    SqliteConnection::establish(&path)
-        .map_err(|_| format_err!("Unable to open db file: {}", path))
+    SqliteConnection::establish(&path).map_err(|_| format_err!("Unable to open db file: {}", path))
 }
 
 pub fn run_migrations(path: &str) -> Result<(), Error> {
