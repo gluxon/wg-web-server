@@ -57,7 +57,7 @@ impl Interface {
             .filter(|section| section.name == "Interface")
             .ok_or(ParseInvalidFirstSection)?;
 
-        let mut interface = Interface {
+        let interface = Interface {
             private_key: interface_section.values.remove("PrivateKey")
                 .ok_or(ParseMissingPrivateKeyError)?
                 .parse()?,
@@ -70,17 +70,13 @@ impl Interface {
                     .map(|x| x.parse())
                     .collect())
                 .unwrap_or_else(|| Ok(vec![]))?,
-            peers: vec![]
+            peers: sections
+                .map(|section| Some(section)
+                    .filter(|section| section.name == "Peer")
+                    .ok_or(ParseInvalidPeerSectionsError.into())
+                    .and_then(|mut section| Peer::from_hashmap(&mut section.values)))
+                .collect::<Result<Vec<Peer>, _>>()?
         };
-
-        // A iter.map.collect to directly set the peers field would have been preferred, but we
-        // have to propagate the ? operator outside of the map closure somehow to do that.
-        for section in sections {
-            let mut section = Some(section)
-                .filter(|section| section.name == "Peer")
-                .ok_or(ParseInvalidPeerSectionsError)?;
-            interface.peers.push(Peer::from_hashmap(&mut section.values)?);
-        }
 
         Ok(interface)
     }
