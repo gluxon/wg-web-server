@@ -7,13 +7,17 @@ use rocket::routes;
 // https://github.com/diesel-rs/diesel/issues/1894#issuecomment-433178841
 #[macro_use]
 extern crate diesel_migrations;
+#[macro_use]
+extern crate diesel;
 
 mod asset;
 mod cli;
 mod controllers;
 mod db;
 mod fairings;
+mod models;
 mod net;
+mod schema;
 
 fn main() -> Result<(), ExitFailure> {
     let args = cli::Args::get_from_clap()?;
@@ -36,6 +40,14 @@ fn main() -> Result<(), ExitFailure> {
         .attach(fairings::Database::fairing())
         .mount("/", asset::Asset)
         .mount("/", routes![controllers::index::index])
+        .mount("/auth", routes![
+            controllers::auth::login,
+            controllers::auth::post_login,
+            controllers::auth::logout,
+        ])
+        .mount("/users", routes![
+            controllers::users::create,
+        ])
         .launch();
 
     Ok(())

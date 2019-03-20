@@ -1,0 +1,15 @@
+{% extends "layout/layout.html" %}
+
+{% block content %}
+  <form method="POST" action="/auth/login">
+    <label>
+      Email
+      <input name="email" type="text" />
+    </label>
+    <label>
+      Password
+      <input name="password" type="password" />
+    </label>
+    <input type="submit" value="Log In">
+  </form>
+{% endblock %}

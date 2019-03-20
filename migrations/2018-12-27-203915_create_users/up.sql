@@ -1,4 +1,6 @@
 CREATE TABLE users (
   id INTEGER NOT NULL PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL
+  email TEXT UNIQUE NOT NULL,
+  password TEXT,
+  administrator INTEGER(1) NOT NULL DEFAULT 0
 )
