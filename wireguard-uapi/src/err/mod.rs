@@ -1,3 +1,6 @@
+mod connect_error;
+pub use connect_error::ConnectError;
+
 mod get_device_error;
 pub use get_device_error::GetDeviceError;
 

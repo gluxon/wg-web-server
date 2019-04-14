@@ -1,7 +1,7 @@
 use crate::attr::WgDeviceAttribute;
 use crate::cmd::WgCmd;
 use crate::consts::{WG_GENL_NAME, WG_GENL_VERSION};
-use crate::err::{GetDeviceError, NlError};
+use crate::err::{ConnectError, GetDeviceError};
 use crate::get::Device;
 use crate::socket::parse::*;
 use crate::socket::NlWgMsgType;
@@ -26,10 +26,11 @@ pub enum GetDeviceArg<'a> {
 }
 
 impl Socket {
-    pub fn connect() -> Result<Self, NlError> {
+    pub fn connect() -> Result<Self, ConnectError> {
         let family_id = {
             let mut nlsock = NlSocket::<GenlId, GenlHdr<CtrlCmd>>::new_genl()?;
-            nlsock.resolve_genl_family(WG_GENL_NAME)?
+            nlsock.resolve_genl_family(WG_GENL_NAME)
+                .map_err(|err| ConnectError::ResolveFamilyError(err))?
         };
 
         let mut wgsock = NlWgSocket::new(NlFamily::Generic)?;
