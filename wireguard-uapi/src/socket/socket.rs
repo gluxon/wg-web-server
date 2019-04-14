@@ -78,6 +78,12 @@ impl Socket {
         self.seq += 1;
         self.sock.send_nl(nlhdr)?;
 
+        // In the future, neli will return multiple Netlink messages. We have to go through each
+        // message and coalesce peers in the way described by the WireGuard UAPI when this change
+        // happens. For now, parsing is broken if the entire response doesn't fit in a single
+        // payload.
+        //
+        // See: https://github.com/jbaublitz/neli/issues/15
         let res = self.sock.recv_nl(None)?;
         let handle = res.nl_payload.get_attr_handle::<WgDeviceAttribute>();
         Ok(parse_device(handle)?)
