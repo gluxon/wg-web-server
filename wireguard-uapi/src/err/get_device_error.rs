@@ -13,6 +13,11 @@ pub enum GetDeviceError {
     #[fail(display = "Interface names must be 1 to IFNAMSIZ-1 characters")]
     InvalidInterfaceName,
 
+    #[fail(
+        display = "Unable to get interface from WireGuard. Make sure it exists and you have permissions to access it."
+    )]
+    AccessError,
+
     #[fail(display = "{}", _0)]
     ParseDeviceError(#[fail(cause)] ParseDeviceError),
 }

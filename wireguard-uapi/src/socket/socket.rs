@@ -5,7 +5,7 @@ use crate::err::{ConnectError, GetDeviceError};
 use crate::get::Device;
 use crate::socket::parse::*;
 use crate::socket::NlWgMsgType;
-use libc::IFNAMSIZ;
+use libc::{IFNAMSIZ, NLMSG_ERROR};
 use neli::ffi::{CtrlCmd, GenlId, NlFamily, NlmF};
 use neli::genlhdr::GenlHdr;
 use neli::nlattr::NlAttrHdr;
@@ -29,7 +29,8 @@ impl Socket {
     pub fn connect() -> Result<Self, ConnectError> {
         let family_id = {
             let mut nlsock = NlSocket::<GenlId, GenlHdr<CtrlCmd>>::new_genl()?;
-            nlsock.resolve_genl_family(WG_GENL_NAME)
+            nlsock
+                .resolve_genl_family(WG_GENL_NAME)
                 .map_err(|err| ConnectError::ResolveFamilyError(err))?
         };
 
@@ -85,6 +86,11 @@ impl Socket {
         //
         // See: https://github.com/jbaublitz/neli/issues/15
         let res = self.sock.recv_nl(None)?;
+
+        if i32::from(res.nl_type) == NLMSG_ERROR {
+            return Err(GetDeviceError::AccessError);
+        }
+
         let handle = res.nl_payload.get_attr_handle::<WgDeviceAttribute>();
         Ok(parse_device(handle)?)
     }
