@@ -1,12 +1,14 @@
 use crate::attr::{NlaNested, WgAllowedIpAttribute, WgDeviceAttribute, WgPeerAttribute};
 use crate::err::{ParseAttributeError, ParseDeviceError, ParseIpAddrError, ParseSockAddrError};
 use crate::get::{AllowedIp, AllowedIpBuilder, Device, DeviceBuilder, Peer, PeerBuilder};
-use libc::{in6_addr, in_addr, timespec, AF_INET, AF_INET6};
+use libc::{in6_addr, in_addr, AF_INET, AF_INET6};
 use neli::err::NlError;
 use neli::nlattr::{AttrHandle, NlAttrHdr};
 use neli::Nl;
+use std::convert::TryFrom;
 use std::mem::size_of;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::time::Duration;
 
 fn parse_nla_nested<T: Nl + Into<u16> + From<u16> + std::cmp::PartialEq>(
     mut handle: AttrHandle<T>,
@@ -98,7 +100,7 @@ pub fn parse_peer(handle: AttrHandle<WgPeerAttribute>) -> Result<Peer, ParseDevi
                 peer_builder.persistent_keepalive_interval(parse_nla_u16(&attr.payload)?);
             }
             WgPeerAttribute::LastHandshakeTime => {
-                peer_builder.last_handshake_time(parse_timespec(&attr.payload)?.into());
+                peer_builder.last_handshake_time(parse_last_handshake_time(&attr.payload)?);
             }
             WgPeerAttribute::RxBytes => {
                 peer_builder.rx_bytes(parse_nla_u64(&attr.payload)?);
@@ -245,7 +247,7 @@ pub fn parse_sockaddr_in(buf: &[u8]) -> Result<SocketAddr, ParseAttributeError> 
     Ok(SocketAddr::new(addr, port))
 }
 
-pub fn parse_timespec(buf: &[u8]) -> Result<timespec, ParseAttributeError> {
+pub fn parse_last_handshake_time(buf: &[u8]) -> Result<Duration, ParseAttributeError> {
     Some(buf.len()).filter(|&len| len == 16).ok_or_else(|| {
         ParseAttributeError::StaticLengthError {
             expected: 16,
@@ -253,11 +255,17 @@ pub fn parse_timespec(buf: &[u8]) -> Result<timespec, ParseAttributeError> {
         }
     })?;
 
-    // https://github.com/torvalds/linux/blob/79a3aaa/include/uapi/linux/time_types.h#L7
-    Ok(timespec {
-        tv_sec: parse_nla_i64(&buf[0..8])?,
-        tv_nsec: parse_nla_i64(&buf[8..16])?,
-    })
+    // WireGuard uses __kernel__timespec for last handshake time.
+    // https://git.zx2c4.com/WireGuard/commit/?id=c870c7af53f44a37814dfc76ceb8ad88e290fcd8
+    //
+    // The following try_from calls should only fail if negative values are returned. Otherwise a
+    // positive valued i64 will fit in a u32 and u64.
+    let secs = parse_nla_i64(&buf[0..8])?;
+    let secs = u64::try_from(secs)?;
+    let nanos = parse_nla_i64(&buf[8..16])?;
+    let nanos = u32::try_from(nanos)?;
+
+    Ok(Duration::new(secs, nanos))
 }
 
 pub fn parse_in_addr(buf: &[u8]) -> Result<Ipv4Addr, ParseAttributeError> {
@@ -350,13 +358,7 @@ mod tests {
                         preshared_key: [0u8; 32],
                         endpoint: "192.95.5.67:1234".parse()?,
                         persistent_keepalive_interval: 0,
-                        last_handshake_time: {
-                            libc::timespec {
-                                tv_sec: 0,
-                                tv_nsec: 0,
-                            }
-                            .into()
-                        },
+                        last_handshake_time: Duration::new(0, 0),
                         rx_bytes: 0,
                         tx_bytes: 0,
                         allowed_ips: vec![
@@ -380,13 +382,7 @@ mod tests {
                         preshared_key: [0u8; 32],
                         endpoint: "[2607:5300:60:6b0::c05f:543]:2468".parse()?,
                         persistent_keepalive_interval: 0,
-                        last_handshake_time: {
-                            libc::timespec {
-                                tv_sec: 0,
-                                tv_nsec: 0,
-                            }
-                            .into()
-                        },
+                        last_handshake_time: Duration::new(0, 0),
                         rx_bytes: 0,
                         tx_bytes: 0,
                         allowed_ips: vec![

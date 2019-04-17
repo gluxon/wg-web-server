@@ -1,5 +1,6 @@
 use failure::Fail;
 use libc;
+use std::num::TryFromIntError;
 use std::string::FromUtf8Error;
 
 #[derive(Fail, Debug)]
@@ -19,6 +20,9 @@ pub enum ParseAttributeError {
     #[fail(display = "{}", _0)]
     FromUtf8Error(#[fail(cause)] FromUtf8Error),
 
+    #[fail(display = "{}", _0)]
+    TryFromIntError(#[fail(cause)] TryFromIntError),
+
     #[fail(display = "Expected a null-terminated string in Netlink response")]
     InvalidCStringError,
 }
@@ -26,6 +30,12 @@ pub enum ParseAttributeError {
 impl From<FromUtf8Error> for ParseAttributeError {
     fn from(error: FromUtf8Error) -> Self {
         ParseAttributeError::FromUtf8Error(error)
+    }
+}
+
+impl From<TryFromIntError> for ParseAttributeError {
+    fn from(error: TryFromIntError) -> Self {
+        ParseAttributeError::TryFromIntError(error)
     }
 }
 
