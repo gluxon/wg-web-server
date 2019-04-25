@@ -1,0 +1,45 @@
+{% extends "layout/layout.html" %}
+
+{% block head %}
+  <link rel="stylesheet" type="text/css" href="/css/network.css">
+{% endblock %}
+
+{% block content %}
+  <h1>Peers</h1>
+  <table class="network-table">
+    <thead>
+      <tr>
+        <td colspan="2">Public Key</td>
+        <td>Allowed IPs</td>
+        <td>Endpoint</td>
+        <td>Latest Handshake</td>
+        <td>Bandwidth</td>
+      </tr>
+    </thead>
+    <tbody>
+      {% for peer in device.peers %}
+        <tr>
+          <td colspan="2">{{ peer.public_key|base64_encode }}</td>
+          <td>{{ peer.allowed_ips|allowed_ips }}</td>
+          <td>
+            {% match peer.endpoint %}
+              {% when Some with (val) %}{{ val|endpoint }}
+              {% when None %}
+            {% endmatch %}
+          </td>
+          <td>
+            {% if peer.last_handshake_time.as_secs() != 0 -%}
+              <strong>{{ peer.last_handshake_time|last_handshake_time }}</strong> ago
+            {% endif -%}
+          </td>
+          <td class="bandwidth">
+            {% if peer.rx_bytes != 0 || peer.tx_bytes != 0 -%}
+              <strong>{{ peer.rx_bytes|bytes }}</strong> received<br />
+              <strong>{{ peer.tx_bytes|bytes }}</strong> transferred
+            {% endif -%}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
