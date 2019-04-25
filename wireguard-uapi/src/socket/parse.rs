@@ -94,7 +94,7 @@ pub fn parse_peer(handle: AttrHandle<WgPeerAttribute>) -> Result<Peer, ParseDevi
                 peer_builder.preshared_key(parse_device_key(&attr.payload)?);
             }
             WgPeerAttribute::Endpoint => {
-                peer_builder.endpoint(parse_sockaddr_in(&attr.payload)?);
+                peer_builder.endpoint(Some(parse_sockaddr_in(&attr.payload)?));
             }
             WgPeerAttribute::PersistentKeepaliveInterval => {
                 peer_builder.persistent_keepalive_interval(parse_nla_u16(&attr.payload)?);
@@ -356,7 +356,7 @@ mod tests {
                             "xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg"
                         )?)?,
                         preshared_key: [0u8; 32],
-                        endpoint: "192.95.5.67:1234".parse()?,
+                        endpoint: Some("192.95.5.67:1234".parse()?),
                         persistent_keepalive_interval: 0,
                         last_handshake_time: Duration::new(0, 0),
                         rx_bytes: 0,
@@ -380,7 +380,7 @@ mod tests {
                             "TrMvSoP4jYQlY6RIzBgbssQqY3vxI2Pi+y71lOWWXX0="
                         )?)?,
                         preshared_key: [0u8; 32],
-                        endpoint: "[2607:5300:60:6b0::c05f:543]:2468".parse()?,
+                        endpoint: Some("[2607:5300:60:6b0::c05f:543]:2468".parse()?),
                         persistent_keepalive_interval: 0,
                         last_handshake_time: Duration::new(0, 0),
                         rx_bytes: 0,

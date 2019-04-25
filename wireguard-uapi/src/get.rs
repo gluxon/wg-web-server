@@ -17,7 +17,8 @@ pub struct Device {
 pub struct Peer {
     pub public_key: [u8; 32],
     pub preshared_key: [u8; 32],
-    pub endpoint: SocketAddr,
+    #[builder(default)]
+    pub endpoint: Option<SocketAddr>,
     pub persistent_keepalive_interval: u16,
     pub last_handshake_time: Duration,
     pub rx_bytes: u64,

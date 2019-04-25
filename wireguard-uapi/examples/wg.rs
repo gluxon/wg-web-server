@@ -39,7 +39,9 @@ fn print_peer(peer: &Peer) {
         "peer".yellow(),
         base64::encode(&peer.public_key).yellow()
     );
-    println!("  {}: {}", "endpoint".black().bold(), peer.endpoint);
+    if let Some(endpoint) = peer.endpoint {
+        println!("  {}: {}", "endpoint".black().bold(), endpoint);
+    }
 
     print!("  {}: ", "allowed ips".black().bold());
     for (i, allowed_ip) in peer.allowed_ips.iter().enumerate() {
