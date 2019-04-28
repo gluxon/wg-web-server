@@ -4,6 +4,9 @@ pub use connect_error::ConnectError;
 mod get_device_error;
 pub use get_device_error::GetDeviceError;
 
+mod set_device_error;
+pub use set_device_error::SetDeviceError;
+
 mod parse_device_error;
 pub use parse_device_error::ParseDeviceError;
 

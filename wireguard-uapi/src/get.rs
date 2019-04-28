@@ -10,6 +10,7 @@ pub struct Device {
     pub public_key: [u8; 32],
     pub listen_port: u16,
     pub fwmark: u32,
+    #[builder(default)]
     pub peers: Vec<Peer>,
 }
 
@@ -23,6 +24,7 @@ pub struct Peer {
     pub last_handshake_time: Duration,
     pub rx_bytes: u64,
     pub tx_bytes: u64,
+    #[builder(default)]
     pub allowed_ips: Vec<AllowedIp>,
     pub protocol_version: u32,
 }

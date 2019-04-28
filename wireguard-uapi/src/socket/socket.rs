@@ -1,8 +1,9 @@
 use crate::attr::WgDeviceAttribute;
 use crate::cmd::WgCmd;
 use crate::consts::{WG_GENL_NAME, WG_GENL_VERSION};
-use crate::err::{ConnectError, GetDeviceError};
-use crate::get::Device;
+use crate::err::{ConnectError, GetDeviceError, SetDeviceError};
+use crate::get;
+use crate::set;
 use crate::socket::parse::*;
 use crate::socket::NlWgMsgType;
 use libc::{IFNAMSIZ, NLMSG_ERROR};
@@ -11,6 +12,7 @@ use neli::genlhdr::GenlHdr;
 use neli::nlattr::NlAttrHdr;
 use neli::nlhdr::NlHdr;
 use neli::socket::NlSocket;
+use std::convert::TryInto;
 
 type NlWgSocket = NlSocket<NlWgMsgType, GenlHdr<WgCmd>>;
 
@@ -48,7 +50,7 @@ impl Socket {
         })
     }
 
-    pub fn get_device(&mut self, interface: GetDeviceArg) -> Result<Device, GetDeviceError> {
+    pub fn get_device(&mut self, interface: GetDeviceArg) -> Result<get::Device, GetDeviceError> {
         let attr = match interface {
             GetDeviceArg::Ifname(name) => {
                 Some(name.len())
@@ -93,5 +95,29 @@ impl Socket {
 
         let handle = res.nl_payload.get_attr_handle::<WgDeviceAttribute>();
         Ok(parse_device(handle)?)
+    }
+
+    pub fn set_device(&mut self, device: set::Device) -> Result<(), SetDeviceError> {
+        let genlhdr = {
+            let cmd = WgCmd::SetDevice;
+            let version = WG_GENL_VERSION;
+            let attrs = (&device).try_into()?;
+            GenlHdr::new::<WgDeviceAttribute>(cmd, version, attrs)?
+        };
+        let nlhdr = {
+            let size = None;
+            let nl_type = self.family_id;
+            let flags = vec![NlmF::Request, NlmF::Ack];
+            let seq = Some(self.seq);
+            let pid = None;
+            let payload = genlhdr;
+            NlHdr::new(size, nl_type, flags, seq, pid, payload)
+        };
+
+        self.seq += 1;
+        self.sock.send_nl(nlhdr)?;
+        self.sock.recv_ack(None)?;
+
+        Ok(())
     }
 }
