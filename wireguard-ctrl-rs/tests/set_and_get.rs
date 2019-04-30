@@ -1,6 +1,7 @@
 use base64;
 use failure;
 use libc;
+use rand;
 use std::time::Duration;
 use wireguard_ctrl_rs;
 use wireguard_ctrl_rs::socket::{GetDeviceArg, Socket};
@@ -115,6 +116,25 @@ fn simple() -> Result<(), failure::Error> {
     test_device.ifindex = response_device.ifindex;
 
     assert_eq!(test_device, response_device);
+
+    Ok(())
+}
+
+#[test]
+fn set_ifname_has_proper_padding() -> Result<(), failure::Error> {
+    let ifname = "wgtest12";
+    let listen_port = rand::random::<u16>();
+
+    let response_device = {
+        let mut wg = Socket::connect()?;
+        let set_device_args = set::Device::from_ifname(ifname).listen_port(listen_port);
+        wg.set_device(set_device_args)?;
+        wg.get_device(GetDeviceArg::Ifname(ifname))?
+    };
+
+    // If ifname wasn't properly padded, the listen_port won't be properly set. Check that it is
+    // properly set as a rough measure that ifname was properly padded.
+    assert_eq!(listen_port, response_device.listen_port);
 
     Ok(())
 }

@@ -306,8 +306,6 @@ impl<'a> TryFrom<&Peer<'a>> for Vec<NlAttrHdr<WgPeerAttribute>> {
                 })
                 .collect::<Result<Vec<NlAttrHdr<NlaNested>>, SerError>>()?;
 
-            println!("{:#?}", allowed_ips_attr);
-
             attrs.push(NlAttrHdr::new_nested(
                 None,
                 WgPeerAttribute::AllowedIps,
