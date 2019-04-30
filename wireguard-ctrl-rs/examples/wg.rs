@@ -2,8 +2,8 @@ use base64;
 use colored::*;
 use failure;
 use std::env;
-use wireguard_uapi::get::{AllowedIp, Device, Peer};
-use wireguard_uapi::socket;
+use wireguard_ctrl_rs::get::{AllowedIp, Device, Peer};
+use wireguard_ctrl_rs::socket;
 
 fn main() -> Result<(), failure::Error> {
     let mut args = env::args();

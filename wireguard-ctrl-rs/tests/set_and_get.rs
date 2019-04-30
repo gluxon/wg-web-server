@@ -2,9 +2,9 @@ use base64;
 use failure;
 use libc;
 use std::time::Duration;
-use wireguard_uapi;
-use wireguard_uapi::socket::{GetDeviceArg, Socket};
-use wireguard_uapi::{get, set};
+use wireguard_ctrl_rs;
+use wireguard_ctrl_rs::socket::{GetDeviceArg, Socket};
+use wireguard_ctrl_rs::{get, set};
 
 fn parse_device_key(buf: &[u8]) -> [u8; 32] {
     let mut key = [0u8; 32];

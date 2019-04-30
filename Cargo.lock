@@ -1680,7 +1680,7 @@ dependencies = [
  "rocket_contrib 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rust-argon2 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rust-embed 4.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "wireguard-uapi 0.0.0",
+ "wireguard-ctrl-rs 0.1.0",
  "x25519-dalek 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1722,8 +1722,8 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "wireguard-uapi"
-version = "0.0.0"
+name = "wireguard-ctrl-rs"
+version = "0.1.0"
 dependencies = [
  "base64 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "buffering 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",

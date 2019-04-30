@@ -3,7 +3,7 @@ use askama::Template;
 use failure;
 use rocket::get;
 use rocket::State;
-use wireguard_uapi::get::Device;
+use wireguard_ctrl_rs::get::Device;
 
 #[derive(Template)]
 #[template(path = "network/index.html")]
@@ -24,7 +24,7 @@ mod filters {
     use pretty_bytes;
     use std::net::SocketAddr;
     use std::time::{Duration, SystemTime};
-    use wireguard_uapi::get::AllowedIp;
+    use wireguard_ctrl_rs::get::AllowedIp;
 
     pub fn base64_encode<T: ?Sized + AsRef<[u8]>>(input: &T) -> Result<String, Error> {
         Ok(base64::encode(input))
