@@ -40,10 +40,10 @@ pub fn parse_device(handle: AttrHandle<WgDeviceAttribute>) -> Result<Device, Par
                 device_builder.ifname(parse_nla_nul_string(attr.payload)?);
             }
             WgDeviceAttribute::PrivateKey => {
-                device_builder.private_key(parse_device_key(&attr.payload)?);
+                device_builder.private_key(Some(parse_device_key(&attr.payload)?));
             }
             WgDeviceAttribute::PublicKey => {
-                device_builder.public_key(parse_device_key(&attr.payload)?);
+                device_builder.public_key(Some(parse_device_key(&attr.payload)?));
             }
             WgDeviceAttribute::ListenPort => {
                 device_builder.listen_port(parse_nla_u16(&attr.payload)?);
@@ -340,12 +340,12 @@ mod tests {
             Device {
                 ifindex: 6,
                 ifname: "test".to_string(),
-                private_key: parse_device_key(&base64::decode(
+                private_key: Some(parse_device_key(&base64::decode(
                     "yAnz5TF+lXXJte14tji3zlMNq+hd2rYUIgJBgB3fBmk="
-                )?)?,
-                public_key: parse_device_key(&base64::decode(
+                )?)?),
+                public_key: Some(parse_device_key(&base64::decode(
                     "HIgo9xNzJMWLKASShiTqIybxZ0U3wGLiUeJ1PKf8ykw="
-                )?)?,
+                )?)?),
                 listen_port: 51820,
                 fwmark: 0,
                 peers: vec![

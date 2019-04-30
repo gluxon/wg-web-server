@@ -20,11 +20,13 @@ fn main() -> Result<(), failure::Error> {
 
 fn print_device(device: &Device) {
     println!("{}: {}", "interface".green(), device.ifname.green());
-    println!(
-        "  {}: {}",
-        "public key".black().bold(),
-        base64::encode(&device.public_key)
-    );
+    if let Some(public_key) = &device.public_key {
+        println!(
+            "  {}: {}",
+            "public key".black().bold(),
+            base64::encode(public_key)
+        );
+    }
     println!("  {}: {}", "listen port".black().bold(), device.listen_port);
 
     for peer in &device.peers {

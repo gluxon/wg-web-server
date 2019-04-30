@@ -31,12 +31,12 @@ fn simple() -> Result<(), failure::Error> {
     let mut test_device = get::Device {
         ifindex: 0,
         ifname: "wgtest0".to_string(),
-        private_key: parse_device_key(&base64::decode(
+        private_key: Some(parse_device_key(&base64::decode(
             "EHhtoXVXpnXz31cx8nrAxQfvaRqe1vf343GVSyEtqUU=",
-        )?),
-        public_key: parse_device_key(&base64::decode(
+        )?)),
+        public_key: Some(parse_device_key(&base64::decode(
             "MhBzmIBrzw8b8iF2FH4ejh/7Vumn6Q/KoR0H5+o7mlY=",
-        )?),
+        )?)),
         listen_port: 1234,
         fwmark: 0,
         peers: vec![
@@ -90,7 +90,7 @@ fn simple() -> Result<(), failure::Error> {
         let mut wg = Socket::connect()?;
 
         let set_device_args = set::Device::from_ifname(&test_device.ifname)
-            .private_key(&test_device.private_key)
+            .private_key(test_device.private_key.as_ref().unwrap())
             .listen_port(test_device.listen_port)
             .flags(vec![set::WgDeviceF::ReplacePeers])
             .peers(vec![

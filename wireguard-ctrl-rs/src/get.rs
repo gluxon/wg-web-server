@@ -6,8 +6,10 @@ use std::time::Duration;
 pub struct Device {
     pub ifindex: u32,
     pub ifname: String,
-    pub private_key: [u8; 32],
-    pub public_key: [u8; 32],
+    #[builder(default)]
+    pub private_key: Option<[u8; 32]>,
+    #[builder(default)]
+    pub public_key: Option<[u8; 32]>,
     pub listen_port: u16,
     pub fwmark: u32,
     #[builder(default)]
