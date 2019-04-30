@@ -6,7 +6,7 @@ use std::io::{BufRead, BufReader};
 // WireGuard configuration files are based on the Windows INI format, but allow multiple sections.
 
 pub struct Conf {
-    pub sections: Vec<Section>
+    pub sections: Vec<Section>,
 }
 
 pub struct Section {
@@ -26,19 +26,18 @@ pub fn parse(file: File) -> Result<Conf, failure::Error> {
             continue;
         }
 
-        if line.len() > 2 && line.starts_with("[") && line.ends_with("]") {
+        if line.len() > 2 && line.starts_with('[') && line.ends_with(']') {
             conf.sections.push(Section {
-                name: line[1..line.len()-1].to_string(),
+                name: line[1..line.len() - 1].to_string(),
                 values: HashMap::new(),
             });
 
             continue;
         }
 
-        match line.splitn(2, "=").collect::<Vec<&str>>().as_slice() {
+        match line.splitn(2, '=').collect::<Vec<&str>>().as_slice() {
             [field, value] => {
-                let section = conf.sections.last_mut()
-                    .ok_or(ConfNoSectionFound)?;
+                let section = conf.sections.last_mut().ok_or(ConfNoSectionFound)?;
 
                 let field = field.trim().to_string();
                 let value = value.trim().to_string();
@@ -47,7 +46,7 @@ pub fn parse(file: File) -> Result<Conf, failure::Error> {
                     return Err(ConfDuplicateField { line_num }.into());
                 }
                 section.values.insert(field, value);
-            },
+            }
             _ => return Err(ConfUnrecognizedLine { line_num }.into()),
         };
     }
@@ -62,11 +61,11 @@ pub struct ConfNoSectionFound;
 #[derive(Debug, failure::Fail)]
 #[fail(display = "line {} is not a field value pair or a section", line_num)]
 pub struct ConfUnrecognizedLine {
-    line_num: usize
+    line_num: usize,
 }
 
 #[derive(Debug, failure::Fail)]
 #[fail(display = "line {} contains a duplicate field", line_num)]
 pub struct ConfDuplicateField {
-    line_num: usize
+    line_num: usize,
 }

@@ -34,7 +34,7 @@ impl Args {
             bind_ip: matches.value_of("BIND_IP").unwrap().to_string(),
             db_path: matches.value_of("DB_PATH").map_or_else(
                 || format!("{}/{}.sqlite3", root_dir, interface),
-                |x| x.to_string(),
+                std::string::ToString::to_string,
             ),
             foreground: matches.is_present("FOREGROUND"),
             interface,

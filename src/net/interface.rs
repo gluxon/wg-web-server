@@ -1,5 +1,5 @@
-use crate::net::{Peer, PrivateKey};
 use crate::net::conf::parse;
+use crate::net::{Peer, PrivateKey};
 use failure;
 use ipnet::IpNet;
 use std::fmt;
@@ -28,16 +28,15 @@ impl Interface {
             private_key: PrivateKey::new()?,
             listen_port: None,
             address: vec![],
-            peers: vec![]
+            peers: vec![],
         })
     }
 
     pub fn init_from_path(path: &Path) -> Result<Self, failure::Error> {
         match fs::File::open(path) {
             Ok(file) => Self::read_from_file(file),
-            Err(ref e) if e.kind() == io::ErrorKind::NotFound =>
-                Self::create_new_at_path(path),
-            Err(e) => return Err(e.into())
+            Err(ref e) if e.kind() == io::ErrorKind::NotFound => Self::create_new_at_path(path),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -53,29 +52,35 @@ impl Interface {
 
         let mut sections = conf.sections.drain(..);
 
-        let mut interface_section = sections.next()
+        let mut interface_section = sections
+            .next()
             .filter(|section| section.name == "Interface")
             .ok_or(ParseInvalidFirstSection)?;
 
         let interface = Interface {
-            private_key: interface_section.values.remove("PrivateKey")
+            private_key: interface_section
+                .values
+                .remove("PrivateKey")
                 .ok_or(ParseMissingPrivateKeyError)?
                 .parse()?,
-            listen_port: interface_section.values.remove("ListenPort")
+            listen_port: interface_section
+                .values
+                .remove("ListenPort")
                 .map(|x| x.parse())
                 .transpose()?,
-            address: interface_section.values.remove("Address")
-                .map(|val| val
-                    .split(",")
-                    .map(|x| x.parse())
-                    .collect())
+            address: interface_section
+                .values
+                .remove("Address")
+                .map(|val| val.split(',').map(str::parse).collect())
                 .unwrap_or_else(|| Ok(vec![]))?,
             peers: sections
-                .map(|section| Some(section)
-                    .filter(|section| section.name == "Peer")
-                    .ok_or(ParseInvalidPeerSectionsError.into())
-                    .and_then(|mut section| Peer::from_hashmap(&mut section.values)))
-                .collect::<Result<Vec<Peer>, _>>()?
+                .map(|section| {
+                    Some(section)
+                        .filter(|section| section.name == "Peer")
+                        .ok_or_else(|| ParseInvalidPeerSectionsError.into())
+                        .and_then(|mut section| Peer::from_hashmap(&mut section.values))
+                })
+                .collect::<Result<Vec<Peer>, _>>()?,
         };
 
         Ok(interface)
@@ -93,9 +98,10 @@ impl fmt::Display for Interface {
         }
 
         if !self.address.is_empty() {
-            let address = &self.address
+            let address = &self
+                .address
                 .iter()
-                .map(|x| x.to_string())
+                .map(std::string::ToString::to_string)
                 .collect::<Vec<String>>()
                 .join(",");
             writeln!(f, "Address = {}", &address)?;
@@ -117,7 +123,9 @@ impl fmt::Display for Interface {
 pub struct ParseInvalidFirstSection;
 
 #[derive(Debug, failure::Fail)]
-#[fail(display = "Invalid configuration file. Only [Peer] sections are allowed after the first [Interface] section.")]
+#[fail(
+    display = "Invalid configuration file. Only [Peer] sections are allowed after the first [Interface] section."
+)]
 pub struct ParseInvalidPeerSectionsError;
 
 #[derive(Debug, failure::Fail)]

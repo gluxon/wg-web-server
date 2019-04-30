@@ -25,9 +25,7 @@ fn parse_nla_nested<T: Nl + Into<u16> + From<u16> + std::cmp::PartialEq>(
     }
 }
 
-pub fn parse_device(
-    handle: AttrHandle<WgDeviceAttribute>,
-) -> Result<Device, ParseDeviceError> {
+pub fn parse_device(handle: AttrHandle<WgDeviceAttribute>) -> Result<Device, ParseDeviceError> {
     let mut device_builder = DeviceBuilder::default();
 
     for attr in parse_nla_nested(handle)? {

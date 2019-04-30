@@ -368,11 +368,10 @@ impl<'a> TryFrom<&AllowedIp<'a>> for Vec<NlAttrHdr<WgAllowedIpAttribute>> {
             ipaddr,
         ));
 
-        let cidr_mask = allowed_ip.cidr_mask
-            .unwrap_or(match allowed_ip.ipaddr {
-                IpAddr::V4(_) => 32,
-                IpAddr::V6(_) => 128,
-            });
+        let cidr_mask = allowed_ip.cidr_mask.unwrap_or(match allowed_ip.ipaddr {
+            IpAddr::V4(_) => 32,
+            IpAddr::V6(_) => 128,
+        });
         attrs.push(NlAttrHdr::new_nl_payload(
             Some(5),
             WgAllowedIpAttribute::CidrMask,

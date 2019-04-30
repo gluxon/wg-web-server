@@ -44,17 +44,16 @@ fn main() -> Result<(), ExitFailure> {
         .manage(wgstate)
         .mount("/", asset::Asset)
         .mount("/", routes![controllers::index::index])
-        .mount("/auth", routes![
-            controllers::auth::login,
-            controllers::auth::post_login,
-            controllers::auth::logout,
-        ])
-        .mount("/network", routes![
-            controllers::network::index,
-        ])
-        .mount("/users", routes![
-            controllers::users::create,
-        ])
+        .mount(
+            "/auth",
+            routes![
+                controllers::auth::login,
+                controllers::auth::post_login,
+                controllers::auth::logout,
+            ],
+        )
+        .mount("/network", routes![controllers::network::index,])
+        .mount("/users", routes![controllers::users::create,])
         .launch();
 
     Ok(())

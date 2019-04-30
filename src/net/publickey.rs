@@ -1,8 +1,8 @@
 use base64;
 use failure;
-use x25519_dalek;
 use std::fmt;
 use std::str::FromStr;
+use x25519_dalek;
 
 pub struct PublicKey(x25519_dalek::PublicKey);
 

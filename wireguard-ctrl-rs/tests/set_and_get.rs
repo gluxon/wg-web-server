@@ -15,12 +15,10 @@ fn parse_device_key(buf: &[u8]) -> [u8; 32] {
 fn create_set_allowed_ips(allowed_ips: &Vec<get::AllowedIp>) -> Vec<set::AllowedIp> {
     allowed_ips
         .iter()
-        .map(|allowed_ip|
-            set::AllowedIp {
-                ipaddr: &allowed_ip.ipaddr,
-                cidr_mask: Some(allowed_ip.cidr_mask)
-            }
-        )
+        .map(|allowed_ip| set::AllowedIp {
+            ipaddr: &allowed_ip.ipaddr,
+            cidr_mask: Some(allowed_ip.cidr_mask),
+        })
         .collect()
 }
 

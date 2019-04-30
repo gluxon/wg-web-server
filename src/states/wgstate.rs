@@ -26,13 +26,11 @@ impl WgState {
     pub fn init(interface_name: String) -> Result<Self, ConnectError> {
         Ok(Self {
             socket: Mutex::new(wireguard_ctrl_rs::Socket::connect()?),
-            interface_name: interface_name,
+            interface_name,
         })
     }
 
-    fn get_socket_guard(
-        &self,
-    ) -> Result<MutexGuard<wireguard_ctrl_rs::Socket>, ConnectError> {
+    fn get_socket_guard(&self) -> Result<MutexGuard<wireguard_ctrl_rs::Socket>, ConnectError> {
         match self.socket.lock() {
             Ok(guard) => Ok(guard),
             // If the mutex for the socket is poisoned, let's just grab a fresh new socket.

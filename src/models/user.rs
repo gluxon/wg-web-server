@@ -31,7 +31,7 @@ impl User {
         match users::table.filter(users::email.eq(email)).first(conn) {
             Ok(user) => Ok(Some(user)),
             Err(diesel::result::Error::NotFound) => Ok(None),
-            Err(err) => Err(err)
+            Err(err) => Err(err),
         }
     }
 

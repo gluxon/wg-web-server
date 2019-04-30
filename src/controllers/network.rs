@@ -34,7 +34,7 @@ mod filters {
         Ok(format!("{}:{}", endpoint.ip(), endpoint.port()))
     }
 
-    pub fn allowed_ips(ips: &Vec<AllowedIp>) -> Result<String, Error> {
+    pub fn allowed_ips(ips: &[AllowedIp]) -> Result<String, Error> {
         Ok(ips
             .iter()
             .map(|allowed_ip| format!("{}/{}", allowed_ip.ipaddr, allowed_ip.cidr_mask))
@@ -55,6 +55,6 @@ mod filters {
     }
 
     pub fn bytes(bytes: &u64) -> Result<String, Error> {
-        Ok(pretty_bytes::converter::convert(bytes.clone() as f64))
+        Ok(pretty_bytes::converter::convert(*bytes as f64))
     }
 }
