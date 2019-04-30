@@ -1,5 +1,4 @@
 use crate::attr::{NlaNested, WgAllowedIpAttribute, WgDeviceAttribute, WgPeerAttribute};
-pub use crate::get::AllowedIp;
 use neli::err::SerError;
 use neli::nlattr::NlAttrHdr;
 use std::borrow::Cow;
@@ -174,7 +173,7 @@ pub struct Peer<'a> {
     pub endpoint: Option<&'a SocketAddr>,
     /// 0 to disable
     pub persistent_keepalive_interval: Option<u16>,
-    pub allowed_ips: Vec<AllowedIp>,
+    pub allowed_ips: Vec<AllowedIp<'a>>,
     /// should not be set or used at all by most users of this API, as the most recent protocol
     /// will be used when this is unset. Otherwise, must be set to 1.
     pub protocol_version: Option<u32>,
@@ -213,7 +212,7 @@ impl<'a> Peer<'a> {
         self
     }
 
-    pub fn allowed_ips(mut self, allowed_ips: Vec<AllowedIp>) -> Self {
+    pub fn allowed_ips(mut self, allowed_ips: Vec<AllowedIp<'a>>) -> Self {
         self.allowed_ips = allowed_ips;
         self
     }
@@ -328,7 +327,21 @@ impl<'a> TryFrom<&Peer<'a>> for Vec<NlAttrHdr<WgPeerAttribute>> {
     }
 }
 
-impl<'a> TryFrom<&AllowedIp> for Vec<NlAttrHdr<WgAllowedIpAttribute>> {
+pub struct AllowedIp<'a> {
+    pub ipaddr: &'a IpAddr,
+    pub cidr_mask: Option<u8>,
+}
+
+impl<'a> AllowedIp<'a> {
+    pub fn from_ipaddr(ipaddr: &'a IpAddr) -> Self {
+        Self {
+            ipaddr,
+            cidr_mask: None,
+        }
+    }
+}
+
+impl<'a> TryFrom<&AllowedIp<'a>> for Vec<NlAttrHdr<WgAllowedIpAttribute>> {
     type Error = SerError;
 
     fn try_from(allowed_ip: &AllowedIp) -> Result<Self, Self::Error> {
@@ -355,11 +368,16 @@ impl<'a> TryFrom<&AllowedIp> for Vec<NlAttrHdr<WgAllowedIpAttribute>> {
             ipaddr,
         ));
 
+        let cidr_mask = allowed_ip.cidr_mask
+            .unwrap_or(match allowed_ip.ipaddr {
+                IpAddr::V4(_) => 32,
+                IpAddr::V6(_) => 128,
+            });
         attrs.push(NlAttrHdr::new_nl_payload(
             Some(5),
             WgAllowedIpAttribute::CidrMask,
             // neli 0.3.1 does not pad. Add 3 bytes to meet required 4 byte boundary.
-            [&allowed_ip.cidr_mask.to_ne_bytes()[..], &[0u8; 3][..]].concat(),
+            [&cidr_mask.to_ne_bytes()[..], &[0u8; 3][..]].concat(),
         )?);
 
         Ok(attrs)

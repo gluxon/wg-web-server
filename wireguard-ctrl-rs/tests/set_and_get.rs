@@ -12,6 +12,18 @@ fn parse_device_key(buf: &[u8]) -> [u8; 32] {
     key
 }
 
+fn create_set_allowed_ips(allowed_ips: &Vec<get::AllowedIp>) -> Vec<set::AllowedIp> {
+    allowed_ips
+        .iter()
+        .map(|allowed_ip|
+            set::AllowedIp {
+                ipaddr: &allowed_ip.ipaddr,
+                cidr_mask: Some(allowed_ip.cidr_mask)
+            }
+        )
+        .collect()
+}
+
 #[test]
 /// This test requires that the "wgtest0" interface already exists.
 ///
@@ -86,14 +98,14 @@ fn simple() -> Result<(), failure::Error> {
             .peers(vec![
                 set::Peer::from_public_key(&test_device.peers[0].public_key)
                     .endpoint(test_device.peers[0].endpoint.as_ref().unwrap())
-                    .allowed_ips(test_device.peers[0].allowed_ips.clone()),
+                    .allowed_ips(create_set_allowed_ips(&test_device.peers[0].allowed_ips)),
                 set::Peer::from_public_key(&test_device.peers[1].public_key)
                     .preshared_key(&test_device.peers[1].preshared_key)
                     .endpoint(test_device.peers[1].endpoint.as_ref().unwrap())
                     .persistent_keepalive_interval(
                         test_device.peers[1].persistent_keepalive_interval,
                     )
-                    .allowed_ips(test_device.peers[1].allowed_ips.clone()),
+                    .allowed_ips(create_set_allowed_ips(&test_device.peers[1].allowed_ips)),
             ]);
 
         wg.set_device(set_device_args)?;
