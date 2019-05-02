@@ -3,6 +3,8 @@ use crate::cmd::WgCmd;
 use crate::consts::{WG_GENL_NAME, WG_GENL_VERSION};
 use crate::err::{ConnectError, GetDeviceError, SetDeviceError};
 use crate::get;
+use crate::netlink;
+use crate::rtnetlink;
 use crate::set;
 use crate::socket::parse::*;
 use crate::socket::NlWgMsgType;
@@ -18,6 +20,7 @@ type NlWgSocket = NlSocket<NlWgMsgType, GenlHdr<WgCmd>>;
 
 pub struct Socket {
     sock: NlWgSocket,
+    route_sock: netlink::Socket,
     seq: u32,
     family_id: NlWgMsgType,
 }
@@ -43,8 +46,11 @@ impl Socket {
         let groups = vec![];
         wgsock.bind(pid, groups)?;
 
+        let route_sock = netlink::Socket::connect(0, 0)?;
+
         Ok(Self {
             sock: wgsock,
+            route_sock,
             seq: 0,
             family_id,
         })
@@ -117,6 +123,64 @@ impl Socket {
         self.seq += 1;
         self.sock.send_nl(nlhdr)?;
         self.sock.recv_ack(None)?;
+
+        Ok(())
+    }
+
+    pub fn add_device(&self, name: &str) -> nix::Result<()> {
+        let msg = netlink::NetlinkMessage {
+            r#type: rtnetlink::RouteMessageType::NewLink as u16,
+            flags: (libc::NLM_F_REQUEST + libc::NLM_F_EXCL + libc::NLM_F_CREATE) as u16,
+            sequence: 0,
+            port: 0,
+            payload: rtnetlink::LinkMessage {
+                family: 0,
+                r#type: 0,
+                index: 0,
+                flags: 0,
+                change: 0,
+                attributes: vec![
+                    netlink::NetlinkAttribute {
+                        r#type: rtnetlink::InterfaceLinkAttribute::InterfaceName.into(),
+                        payload: name.to_string().into(),
+                    },
+                    netlink::NetlinkAttribute {
+                        r#type: rtnetlink::InterfaceLinkAttribute::LinkInfo.into(),
+                        payload: vec![netlink::NetlinkAttribute {
+                            r#type: rtnetlink::LinkInfoAttribute::Kind.into(),
+                            payload: "wireguard".to_string().into(),
+                        }]
+                        .into(),
+                    },
+                ],
+            },
+        };
+
+        self.route_sock.send(&msg)?;
+
+        Ok(())
+    }
+
+    pub fn delete_device(&self, name: &str) -> nix::Result<()> {
+        let msg = netlink::NetlinkMessage {
+            r#type: rtnetlink::RouteMessageType::DelLink as u16,
+            flags: libc::NLM_F_REQUEST as u16,
+            sequence: 0,
+            port: 0,
+            payload: rtnetlink::LinkMessage {
+                family: 0,
+                r#type: 0,
+                index: 0,
+                flags: 0,
+                change: 0,
+                attributes: vec![netlink::NetlinkAttribute {
+                    r#type: rtnetlink::InterfaceLinkAttribute::InterfaceName.into(),
+                    payload: name.to_string().into(),
+                }],
+            },
+        };
+
+        self.route_sock.send(&msg)?;
 
         Ok(())
     }

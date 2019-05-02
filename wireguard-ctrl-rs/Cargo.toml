@@ -9,6 +9,7 @@ derive_builder = "0.7.1"
 failure = "0.1.5"
 libc = "0.2.51"
 neli = "0.3.1"
+nix = "0.13.0"
 
 [dev-dependencies]
 base64 = "0.10.1"

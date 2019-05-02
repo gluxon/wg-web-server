@@ -24,10 +24,6 @@ fn create_set_allowed_ips(allowed_ips: &Vec<get::AllowedIp>) -> Vec<set::Allowed
 }
 
 #[test]
-/// This test requires that the "wgtest0" interface already exists.
-///
-///   - Create it with: ip link add wgtest0 type wireguard
-///   - Remove it with: ip link del wgtest0
 fn simple() -> Result<(), failure::Error> {
     let mut test_device = get::Device {
         ifindex: 0,
@@ -90,6 +86,8 @@ fn simple() -> Result<(), failure::Error> {
     let response_device = {
         let mut wg = Socket::connect()?;
 
+        wg.add_device(&test_device.ifname)?;
+
         let set_device_args = set::Device::from_ifname(&test_device.ifname)
             .private_key(test_device.private_key.as_ref().unwrap())
             .listen_port(test_device.listen_port)
@@ -108,7 +106,10 @@ fn simple() -> Result<(), failure::Error> {
             ]);
 
         wg.set_device(set_device_args)?;
-        wg.get_device(GetDeviceArg::Ifname(&test_device.ifname))?
+        let response_device = wg.get_device(GetDeviceArg::Ifname(&test_device.ifname))?;
+        wg.delete_device(&test_device.ifname)?;
+
+        response_device
     };
 
     // The ifindex can't be determined before response_device is set. So we'll just copy over the
@@ -127,9 +128,12 @@ fn set_ifname_has_proper_padding() -> Result<(), failure::Error> {
 
     let response_device = {
         let mut wg = Socket::connect()?;
+        wg.add_device(ifname)?;
         let set_device_args = set::Device::from_ifname(ifname).listen_port(listen_port);
         wg.set_device(set_device_args)?;
-        wg.get_device(GetDeviceArg::Ifname(ifname))?
+        let response_device = wg.get_device(GetDeviceArg::Ifname(ifname))?;
+        wg.delete_device(ifname)?;
+        response_device
     };
 
     // If ifname wasn't properly padded, the listen_port won't be properly set. Check that it is
