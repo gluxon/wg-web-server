@@ -16,7 +16,7 @@ PrivateKey = ${privateKey}
 Address = ${json.address}
 
 [Peer]
-PublicKey = eNMXVx9Zp65jK3wLmmYzS3/ikfWvyYiiGETUnFXqjiI=
+PublicKey = ${json.server_public_key}
 AllowedIPs = 0.0.0.0/0, ::0/0
 Endpoint = ${window.location.hostname}:51820`
 

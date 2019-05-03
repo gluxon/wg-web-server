@@ -25,6 +25,7 @@ pub enum CreateResponse {
 #[derive(Serialize)]
 pub struct CreateResponseJson {
     address: Ipv4Addr,
+    server_public_key: String,
 }
 
 #[post("/", data = "<form>")]
@@ -58,7 +59,10 @@ pub fn create(
     public_key.copy_from_slice(&base64::decode(&form.public_key)?);
     wg.add_peer(public_key, ipaddr.clone())?;
 
+    let device = wg.get_device()?;
+
     Ok(CreateResponse::Json(rocket_contrib::json::Json(CreateResponseJson {
         address: ipaddr,
+        server_public_key: base64::encode(device.public_key.as_ref().unwrap()),
     })))
 }
