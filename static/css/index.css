@@ -1,0 +1,21 @@
+button {
+  appearance: none;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+
+  border: 0;
+  background: var(--secondary-color);
+  color: white;
+  padding: 1em;
+  font-size: inherit;
+  border-radius: 5px;
+  cursor: pointer;
+
+  transition-duration: 0.15s;
+}
+
+button[disabled] {
+  background-color: var(--gray-color);
+  color: rgba(0, 0, 0, 0.3);
+  cursor: not-allowed;
+}

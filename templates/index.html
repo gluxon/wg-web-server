@@ -1,12 +1,14 @@
 {% extends "layout/layout.html" %}
 
 {% block head %}
+  <link rel="stylesheet" type="text/css" href="/css/index.css">
   <script src="/js/dist/FileSaver.min.js"></script>
   <script src="/js/wireguard.js"></script>
   <script src="/js/generate-conf.js"></script>
 {% endblock %}
 
 {% block content %}
-  <h1>Hello {{ name }}</h1>
-  <button onclick="generateConf()">Download Configuration</button>
+  <p>Welcome to the WireGuard provisioning server demo.<p>
+  <button onclick="downloadConfiguration()">Download Configuration</button>
+  <p>After downloading, checkout the local intranet site <a target="_blank" href="http://10.24.24.1">http://10.24.24.1</a></p>
 {% endblock %}

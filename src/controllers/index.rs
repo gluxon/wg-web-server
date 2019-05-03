@@ -3,11 +3,9 @@ use rocket::get;
 
 #[derive(Template)]
 #[template(path = "index.html")]
-pub struct IndexTemplate<'a> {
-    name: &'a str,
-}
+pub struct IndexTemplate;
 
 #[get("/")]
-pub fn index() -> IndexTemplate<'static> {
-    IndexTemplate { name: "world" }
+pub fn index() -> IndexTemplate {
+    IndexTemplate {}
 }

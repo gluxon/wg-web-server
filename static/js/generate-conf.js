@@ -1,3 +1,9 @@
+function downloadConfiguration() {
+  window.event.target.disabled = true
+  window.event.target.onclick = null
+  generateConf()
+}
+
 async function generateConf() {
   const { publicKey, privateKey} = window.wireguard.generateKeypair()
 
