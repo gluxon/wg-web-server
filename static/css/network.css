@@ -1,3 +1,7 @@
+main {
+  padding: 0 3em;
+}
+
 .network-table {
   border-radius: 5px;
   overflow: hidden;

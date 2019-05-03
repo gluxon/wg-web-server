@@ -19,3 +19,10 @@ button[disabled] {
   color: rgba(0, 0, 0, 0.3);
   cursor: not-allowed;
 }
+
+main {
+  width: 100%;
+  max-width: 30em;
+  margin: auto;
+  padding: 1em;
+}

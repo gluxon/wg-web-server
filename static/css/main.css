@@ -14,10 +14,3 @@ body {
 h1 {
   font-weight: normal;
 }
-
-#content {
-  width: 100%;
-  max-width: 30em;
-  margin: auto;
-  padding: 1em;
-}
