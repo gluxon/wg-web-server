@@ -53,6 +53,7 @@ fn main() -> Result<(), ExitFailure> {
             ],
         )
         .mount("/network", routes![controllers::network::index,])
+        .mount("/peers", routes![controllers::peers::create])
         .mount("/users", routes![controllers::users::create,])
         .launch();
 

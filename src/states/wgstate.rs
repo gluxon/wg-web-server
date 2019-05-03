@@ -1,3 +1,4 @@
+use std::net::{IpAddr, Ipv4Addr};
 use std::sync::{Mutex, MutexGuard};
 use wireguard_ctrl_rs;
 use wireguard_ctrl_rs::err::ConnectError;
@@ -47,5 +48,26 @@ impl WgState {
         let socket = &mut *guard;
         let device = socket.get_device(GetDeviceArg::Ifname(&self.interface_name))?;
         Ok(device)
+    }
+
+    pub fn add_peer(&self, public_key: [u8; 32], ipaddr: Ipv4Addr) -> Result<(), failure::Error> {
+        use wireguard_ctrl_rs::set::{Device, Peer, AllowedIp};
+        let mut guard = self.get_socket_guard()?;
+        let socket = &mut *guard;
+
+        socket.set_device(Device::from_ifname(&self.interface_name)
+            .peers(vec![
+                Peer::from_public_key(&public_key)
+                    .allowed_ips(vec![
+                        AllowedIp {
+                            ipaddr: &IpAddr::V4(ipaddr.clone()),
+                            cidr_mask: None
+                        }
+                    ])
+            ]))?;
+
+        socket.new_route(&self.interface_name, ipaddr)?;
+
+        Ok(())
     }
 }
