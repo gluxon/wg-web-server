@@ -14,6 +14,7 @@ async function generateConf() {
 [Interface]
 PrivateKey = ${privateKey}
 Address = ${json.address}
+DNS = 8.8.8.8
 
 [Peer]
 PublicKey = ${json.server_public_key}
