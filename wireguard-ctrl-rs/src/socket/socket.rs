@@ -15,6 +15,7 @@ use neli::nlattr::NlAttrHdr;
 use neli::nlhdr::NlHdr;
 use neli::socket::NlSocket;
 use std::convert::TryInto;
+use std::net::Ipv4Addr;
 
 type NlWgSocket = NlSocket<NlWgMsgType, GenlHdr<WgCmd>>;
 
@@ -129,7 +130,7 @@ impl Socket {
 
     pub fn add_device(&self, name: &str) -> nix::Result<()> {
         let msg = netlink::NetlinkMessage {
-            r#type: rtnetlink::RouteMessageType::NewLink as u16,
+            r#type: rtnetlink::MessageType::NewLink as u16,
             flags: (libc::NLM_F_REQUEST + libc::NLM_F_EXCL + libc::NLM_F_CREATE) as u16,
             sequence: 0,
             port: 0,
@@ -163,7 +164,7 @@ impl Socket {
 
     pub fn delete_device(&self, name: &str) -> nix::Result<()> {
         let msg = netlink::NetlinkMessage {
-            r#type: rtnetlink::RouteMessageType::DelLink as u16,
+            r#type: rtnetlink::MessageType::DelLink as u16,
             flags: libc::NLM_F_REQUEST as u16,
             sequence: 0,
             port: 0,
@@ -177,6 +178,44 @@ impl Socket {
                     r#type: rtnetlink::InterfaceLinkAttribute::InterfaceName.into(),
                     payload: name.to_string().into(),
                 }],
+            },
+        };
+
+        self.route_sock.send(&msg)?;
+
+        Ok(())
+    }
+
+    pub fn new_route(&mut self, name: &str, ip: Ipv4Addr) -> nix::Result<()> {
+        let device = self.get_device(GetDeviceArg::Ifname(name)).unwrap();
+
+        let msg = netlink::NetlinkMessage {
+            r#type: rtnetlink::MessageType::NewRoute as u16,
+            flags: (libc::NLM_F_REQUEST + libc::NLM_F_EXCL + libc::NLM_F_CREATE) as u16,
+            sequence: 0,
+            port: 0,
+            payload: rtnetlink::RouteMessage {
+                family: libc::AF_INET as u8,
+                destination_len: 32,
+                source_len: 0,
+                tos: 0,
+                table: rtnetlink::RouteTable::Main as u8,
+                protocol: rtnetlink::RouteMessageProtocol::Boot as u8,
+                scope: rtnetlink::RouteScope::Link as u8,
+                r#type: rtnetlink::RouteMessageType::Unicast as u8,
+                flags: 0,
+                attributes: vec![
+                    netlink::NetlinkAttribute {
+                        r#type: rtnetlink::RouteMessageAttributeType::Destination as u16,
+                        payload: ip.into(),
+                    },
+                    netlink::NetlinkAttribute {
+                        r#type: rtnetlink::RouteMessageAttributeType::OutputInterface as u16,
+                        payload: netlink::NetlinkAttributePayload(
+                            device.ifindex.to_ne_bytes().to_vec(),
+                        ),
+                    },
+                ],
             },
         };
 

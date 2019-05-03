@@ -10,6 +10,7 @@ use nix::sys::socket::{
     connect, recv, send, socket, AddressFamily, MsgFlags, SockAddr, SockFlag, SockType,
 };
 use std::mem::size_of;
+use std::net::Ipv4Addr;
 use std::os::unix::io::RawFd;
 
 pub use nix::Result;
@@ -91,6 +92,12 @@ impl From<String> for NetlinkAttributePayload {
         let mut bytes = string.into_bytes();
         bytes.push(0);
         Self(bytes)
+    }
+}
+
+impl From<Ipv4Addr> for NetlinkAttributePayload {
+    fn from(addr: Ipv4Addr) -> Self {
+        Self(addr.octets().to_vec())
     }
 }
 
