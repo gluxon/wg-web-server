@@ -43,6 +43,10 @@ jobs:
     - stage: check
       name: Test
       script:
+        # Necessary for tests that read/write to the configuration folder.
+        - sudo mkdir -p /var/lib/wg-web-server
+        - sudo chown $(whoami) /var/lib/wg-web-server
+
         - cargo build --tests --verbose
         # Give compiled tests the ability to set and read WireGuard devices. Otherwise
         # they will likely fail with access/permission errors.
