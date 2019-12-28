@@ -1,6 +1,8 @@
 language: rust
 rust:
-  - nightly
+  # The nightly version has to be locked since a build of clippy isn't always
+  # available for the current nightly.
+  - nightly-2019-12-19
 
 os:
   - linux
