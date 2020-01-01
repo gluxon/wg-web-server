@@ -1,13 +1,12 @@
-use assert_cmd::prelude::*;
+use assert_cmd::Command;
 use failure::Error;
 use predicates::prelude::*;
-use std::process::Command;
 
 #[test]
 fn invalid_address() -> Result<(), Error> {
-    let mut cmd = Command::main_binary()?;
-    cmd.arg("-b").arg("not_an_ip");
-    cmd.assert()
+    let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
+    let assert = cmd.arg("-b").arg("not_an_ip").assert();
+    assert
         .failure()
         .stderr(predicate::str::contains("expected a valid hostname"));
     Ok(())
@@ -15,11 +14,9 @@ fn invalid_address() -> Result<(), Error> {
 
 #[test]
 fn invalid_port() -> Result<(), Error> {
-    let mut cmd = Command::main_binary()?;
     let big_port_arg = format!("{}", 2u32.pow(16));
-    cmd.arg("-p").arg(big_port_arg);
-    cmd.assert()
-        .failure()
-        .stderr(predicate::str::contains("port"));
+    let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
+    let assert = cmd.arg("-p").arg(big_port_arg).assert();
+    assert.failure().stderr(predicate::str::contains("port"));
     Ok(())
 }
