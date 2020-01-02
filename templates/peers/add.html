@@ -1,8 +1,18 @@
 {% extends "layout/layout.html" %}
 
 {% block content %}
-  <form action="/peers" method="post">
-    <label>Public Key: <input name="public_key"></label>
+  <h1>Add A New Peer</h1>
+  {% match status %}
+    {% when Some with (val) %}<p>{{ val }}</p>
+    {% when None %}
+  {% endmatch %}
+  <form action="/peers/add" method="post">
+    <label>Public Key: <input name="public_key" size="48"></label>
+    <br />
     <input type="submit" value="Add Peer">
+    {% match public_key_err %}
+      {% when Some with (val) %}{{ val }}
+      {% when None %}
+    {% endmatch %}
   </form>
 {% endblock %}

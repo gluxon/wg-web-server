@@ -1,5 +1,7 @@
 use base64;
 use failure;
+use rocket::http::RawStr;
+use rocket::request::FromFormValue;
 use std::fmt;
 use std::str::FromStr;
 use x25519_dalek;
@@ -31,6 +33,15 @@ impl FromStr for PublicKey {
 impl fmt::Display for PublicKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", base64::encode(&self.0.as_bytes()))
+    }
+}
+
+impl<'a> FromFormValue<'a> for PublicKey {
+    type Error = failure::Error;
+
+    fn from_form_value(form_value: &'a RawStr) -> Result<PublicKey, failure::Error> {
+        let decoded = form_value.url_decode()?;
+        PublicKey::from_str(&decoded)
     }
 }
 

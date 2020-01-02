@@ -14,6 +14,7 @@ mod config;
 mod controllers;
 mod db;
 mod fairings;
+mod lang;
 mod launchpad;
 mod models;
 mod schema;
