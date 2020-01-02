@@ -1,0 +1,8 @@
+{% extends "layout/layout.html" %}
+
+{% block content %}
+  <form action="/peers" method="post">
+    <label>Public Key: <input name="public_key"></label>
+    <input type="submit" value="Add Peer">
+  </form>
+{% endblock %}

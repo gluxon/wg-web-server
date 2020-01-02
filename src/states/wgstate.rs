@@ -78,4 +78,21 @@ impl WgState {
         let device = socket.get_device(DeviceInterface::from_name(&self.interface_config.name))?;
         Ok(device)
     }
+
+    pub fn add_peer(&self, public_key: &[u8; 32]) -> Result<(), failure::Error> {
+        let mut guard = self.get_wg_socket_guard()?;
+        let socket = &mut *guard;
+
+        let device = wireguard_uapi::set::Device {
+            interface: DeviceInterface::from_name(&self.interface_config.name),
+            flags: vec![],
+            private_key: None,
+            listen_port: None,
+            fwmark: None,
+            peers: vec![wireguard_uapi::set::Peer::from_public_key(public_key)],
+        };
+        socket.set_device(device)?;
+
+        Ok(())
+    }
 }

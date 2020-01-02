@@ -30,5 +30,9 @@ pub fn get_rocket(config: Config, wgstate: states::WgState) -> Rocket {
             ],
         )
         .mount("/network", routes![controllers::network::index,])
+        .mount(
+            "/peers",
+            routes![controllers::peers::add, controllers::peers::post_add],
+        )
         .mount("/users", routes![controllers::users::create,])
 }
