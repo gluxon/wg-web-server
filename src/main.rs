@@ -22,7 +22,8 @@ mod states;
 
 fn main() -> Result<(), ExitFailure> {
     let args = cli::Args::get_from_clap()?;
-    let interface = net::Interface::init_from_path(&args.interface_config)?;
+    // TODO: Read and apply device & peers from the interface configuration object.
+    let _interface = net::Interface::init_from_path(&args.interface_config)?;
 
     let should_daemonize = !args.foreground && !cfg!(debug_assertions);
     if should_daemonize {
