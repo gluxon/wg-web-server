@@ -54,6 +54,8 @@ mod filters {
             .unwrap_or_else(|| "Unknown".to_string()))
     }
 
+    // The &u64 argument should be u64, but askama seems to require filters to pass references.
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     pub fn bytes(bytes: &u64) -> Result<String, Error> {
         Ok(pretty_bytes::converter::convert(*bytes as f64))
     }
