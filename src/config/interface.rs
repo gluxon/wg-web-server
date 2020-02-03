@@ -1,5 +1,5 @@
-use crate::net::conf::parse;
-use crate::net::{Peer, PrivateKey};
+use super::conf::parse;
+use super::{Peer, PrivateKey};
 use failure;
 use ipnet::IpNet;
 use std::fmt;

@@ -1,4 +1,4 @@
-use crate::net::{PresharedKey, PublicKey};
+use super::{PresharedKey, PublicKey};
 use failure;
 use ipnet::IpNet;
 use std::collections::HashMap;
