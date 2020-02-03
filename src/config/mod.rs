@@ -1,4 +1,4 @@
-pub mod conf;
+pub mod conf_file;
 
 pub mod interface;
 pub use interface::Interface;

@@ -5,17 +5,15 @@ use std::io::{BufRead, BufReader};
 
 // WireGuard configuration files are based on the Windows INI format, but allow multiple sections.
 
-pub struct Conf {
-    pub sections: Vec<Section>,
-}
+type ConfFile = Vec<Section>;
 
 pub struct Section {
     pub name: String,
     pub values: HashMap<String, String>,
 }
 
-pub fn parse(file: File) -> Result<Conf, failure::Error> {
-    let mut conf = Conf { sections: vec![] };
+pub fn parse(file: File) -> Result<ConfFile, failure::Error> {
+    let mut conf = vec![];
 
     for (i, line) in BufReader::new(file).lines().enumerate() {
         let line_num = i + 1;
@@ -27,7 +25,7 @@ pub fn parse(file: File) -> Result<Conf, failure::Error> {
         }
 
         if line.len() > 2 && line.starts_with('[') && line.ends_with(']') {
-            conf.sections.push(Section {
+            conf.push(Section {
                 name: line[1..line.len() - 1].to_string(),
                 values: HashMap::new(),
             });
@@ -37,7 +35,7 @@ pub fn parse(file: File) -> Result<Conf, failure::Error> {
 
         match line.splitn(2, '=').collect::<Vec<&str>>().as_slice() {
             [field, value] => {
-                let section = conf.sections.last_mut().ok_or(ConfNoSectionFound)?;
+                let section = conf.last_mut().ok_or(ConfNoSectionFound)?;
 
                 let field = field.trim().to_string();
                 let value = value.trim().to_string();

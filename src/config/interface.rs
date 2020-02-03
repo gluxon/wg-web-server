@@ -1,4 +1,4 @@
-use super::conf::parse;
+use super::conf_file::parse;
 use super::{Peer, PrivateKey};
 use failure;
 use ipnet::IpNet;
@@ -50,7 +50,7 @@ impl Interface {
     pub fn read_from_file(file: fs::File) -> Result<Self, failure::Error> {
         let mut conf = parse(file)?;
 
-        let mut sections = conf.sections.drain(..);
+        let mut sections = conf.drain(..);
 
         let mut interface_section = sections
             .next()
