@@ -1,3 +1,4 @@
+use crate::config::Config;
 use std::sync::{Mutex, MutexGuard};
 use wireguard_uapi::err::ConnectError;
 use wireguard_uapi::get::Device;
@@ -18,15 +19,24 @@ pub struct WgState {
     // I was able to remove the Mutex by patching neli and removing sequence ids, but this was done
     // in a hacky way (and we need sequence ids).
     pub socket: Mutex<WgSocket>,
-    interface_name: String,
+    interface_config: Config,
 }
 
 impl WgState {
-    pub fn init(interface_name: String) -> Result<Self, ConnectError> {
+    pub fn init(interface_config: Config) -> Result<Self, ConnectError> {
         Ok(Self {
             socket: Mutex::new(WgSocket::connect()?),
-            interface_name,
+            interface_config,
         })
+    }
+
+    pub fn apply_config(&self) -> Result<(), failure::Error> {
+        let mut guard = self.get_socket_guard()?;
+        let socket = &mut *guard;
+
+        socket.set_device((&self.interface_config).into())?;
+
+        Ok(())
     }
 
     fn get_socket_guard(&self) -> Result<MutexGuard<WgSocket>, ConnectError> {
@@ -44,7 +54,7 @@ impl WgState {
     pub fn get_device(&self) -> Result<Device, failure::Error> {
         let mut guard = self.get_socket_guard()?;
         let socket = &mut *guard;
-        let device = socket.get_device(DeviceInterface::from_name(&self.interface_name))?;
+        let device = socket.get_device(DeviceInterface::from_name(&self.interface_config.name))?;
         Ok(device)
     }
 }

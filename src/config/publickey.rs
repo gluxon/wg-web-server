@@ -6,6 +6,13 @@ use x25519_dalek;
 
 pub struct PublicKey(x25519_dalek::PublicKey);
 
+impl PublicKey {
+    #[inline]
+    pub fn as_bytes(&self) -> &[u8; 32] {
+        self.0.as_bytes()
+    }
+}
+
 impl FromStr for PublicKey {
     type Err = failure::Error;
 

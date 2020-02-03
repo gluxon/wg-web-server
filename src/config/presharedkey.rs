@@ -5,6 +5,13 @@ use std::str::FromStr;
 
 pub struct PresharedKey([u8; 32]);
 
+impl PresharedKey {
+    #[inline]
+    pub fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
+    }
+}
+
 impl FromStr for PresharedKey {
     type Err = failure::Error;
 

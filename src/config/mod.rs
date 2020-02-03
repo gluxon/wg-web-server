@@ -131,6 +131,22 @@ impl fmt::Display for Config {
     }
 }
 
+impl<'a> From<&'a Config> for wireguard_uapi::set::Device<'a> {
+    fn from(config: &'a Config) -> Self {
+        let mut device =
+            Self::from_ifname(&config.name).private_key(&config.interface.private_key.as_bytes());
+
+        if let Some(listen_port) = config.interface.listen_port {
+            device = device.listen_port(listen_port);
+        }
+
+        let peers = config.peers.iter().map(|peer| peer.into()).collect();
+        device = device.peers(peers);
+
+        device
+    }
+}
+
 #[derive(Debug, failure::Fail)]
 #[fail(display = "Configuration files must start with an [Interface] section.")]
 pub struct ParseInvalidFirstSection;

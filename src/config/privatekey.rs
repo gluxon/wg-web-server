@@ -5,12 +5,19 @@ use std::fmt;
 use std::str::FromStr;
 use x25519_dalek::StaticSecret;
 
-pub struct PrivateKey(StaticSecret);
+pub struct PrivateKey([u8; 32]);
 
 impl PrivateKey {
     pub fn new() -> Result<Self, failure::Error> {
         let mut os_rng = OsRng::new()?;
-        Ok(Self(StaticSecret::new(&mut os_rng)))
+        let static_secret = StaticSecret::new(&mut os_rng);
+        let bytes = static_secret.to_bytes();
+        Ok(Self(bytes))
+    }
+
+    #[inline]
+    pub fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
     }
 }
 
@@ -25,13 +32,15 @@ impl FromStr for PrivateKey {
             return Err(InvalidLengthError.into());
         }
 
-        Ok(Self(x25519_dalek::StaticSecret::from(decoded)))
+        let static_secret = x25519_dalek::StaticSecret::from(decoded);
+        let bytes = static_secret.to_bytes();
+        Ok(Self(bytes))
     }
 }
 
 impl fmt::Display for PrivateKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", base64::encode(&self.0.to_bytes()))
+        write!(f, "{}", base64::encode(self.as_bytes()))
     }
 }
 

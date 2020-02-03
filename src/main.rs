@@ -22,9 +22,7 @@ mod states;
 
 fn main() -> Result<(), ExitFailure> {
     let args = cli::Args::get_from_clap()?;
-    // TODO: Read and apply device & peers from the interface configuration object.
-    let _interface =
-        config::Config::init_from_path(args.interface.clone(), &args.interface_config)?;
+    let interface_config = config::Config::init_from_path(args.interface, &args.interface_config)?;
 
     let should_daemonize = !args.foreground && !cfg!(debug_assertions);
     if should_daemonize {
@@ -39,7 +37,8 @@ fn main() -> Result<(), ExitFailure> {
         .extra("databases", db::make_rocket_database_config(&args.db_path))
         .finalize()?;
 
-    let wgstate = states::WgState::init(args.interface.clone())?;
+    let wgstate = states::WgState::init(interface_config)?;
+    wgstate.apply_config()?;
 
     rocket::custom(config)
         .attach(fairings::Database::fairing())
