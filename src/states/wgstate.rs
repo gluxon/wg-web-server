@@ -18,29 +18,29 @@ pub struct WgState {
     //
     // I was able to remove the Mutex by patching neli and removing sequence ids, but this was done
     // in a hacky way (and we need sequence ids).
-    pub socket: Mutex<WgSocket>,
+    pub wg_socket: Mutex<WgSocket>,
     interface_config: Config,
 }
 
 impl WgState {
     pub fn init(interface_config: Config) -> Result<Self, ConnectError> {
         Ok(Self {
-            socket: Mutex::new(WgSocket::connect()?),
+            wg_socket: Mutex::new(WgSocket::connect()?),
             interface_config,
         })
     }
 
     pub fn apply_config(&self) -> Result<(), failure::Error> {
-        let mut guard = self.get_socket_guard()?;
-        let socket = &mut *guard;
+        let mut wg_guard = self.get_wg_socket_guard()?;
+        let wg_socket = &mut *wg_guard;
 
-        socket.set_device((&self.interface_config).into())?;
+        wg_socket.set_device((&self.interface_config).into())?;
 
         Ok(())
     }
 
-    fn get_socket_guard(&self) -> Result<MutexGuard<WgSocket>, ConnectError> {
-        match self.socket.lock() {
+    fn get_wg_socket_guard(&self) -> Result<MutexGuard<WgSocket>, ConnectError> {
+        match self.wg_socket.lock() {
             Ok(guard) => Ok(guard),
             // If the mutex for the socket is poisoned, let's just grab a fresh new socket.
             Err(poisoned) => {
@@ -52,7 +52,7 @@ impl WgState {
     }
 
     pub fn get_device(&self) -> Result<Device, failure::Error> {
-        let mut guard = self.get_socket_guard()?;
+        let mut guard = self.get_wg_socket_guard()?;
         let socket = &mut *guard;
         let device = socket.get_device(DeviceInterface::from_name(&self.interface_config.name))?;
         Ok(device)
