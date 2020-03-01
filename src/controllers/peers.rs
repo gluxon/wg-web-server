@@ -1,8 +1,8 @@
 use crate::config::publickey::PublicKey;
 use crate::lang;
 use crate::states::WgState;
+use crate::utils::FormInputResult;
 use askama::Template;
-use failure;
 use rocket::request::Form;
 use rocket::{get, State};
 use rocket::{post, FromForm};
@@ -22,8 +22,8 @@ pub fn add() -> AddPeerTemplate<'static> {
 }
 
 #[derive(FromForm)]
-pub struct AddPeer {
-    public_key: Result<PublicKey, failure::Error>,
+pub struct AddPeer<'v> {
+    public_key: FormInputResult<'v, PublicKey>,
 }
 
 #[post("/add", data = "<form>")]
@@ -38,7 +38,7 @@ pub fn post_add(wg: State<WgState>, form: Form<AddPeer>) -> AddPeerTemplate<'sta
         Ok(public_key) => public_key,
         Err(public_key_err) => {
             return AddPeerTemplate {
-                public_key_err: Some(format!("{}", public_key_err)),
+                public_key_err: Some(format!("{}", public_key_err.error)),
                 ..Default::default()
             };
         }

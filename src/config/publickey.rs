@@ -1,7 +1,6 @@
+use crate::impl_with_fromstr_with_error;
 use base64;
 use failure;
-use rocket::http::RawStr;
-use rocket::request::FromFormValue;
 use std::fmt;
 use std::str::FromStr;
 use x25519_dalek;
@@ -36,14 +35,7 @@ impl fmt::Display for PublicKey {
     }
 }
 
-impl<'a> FromFormValue<'a> for PublicKey {
-    type Error = failure::Error;
-
-    fn from_form_value(form_value: &'a RawStr) -> Result<PublicKey, failure::Error> {
-        let decoded = form_value.url_decode()?;
-        PublicKey::from_str(&decoded)
-    }
-}
+impl_with_fromstr_with_error!(PublicKey);
 
 #[derive(Debug, failure::Fail)]
 #[fail(display = "public keys must be exactly 32 bytes long")]

@@ -19,6 +19,7 @@ mod launchpad;
 mod models;
 mod schema;
 mod states;
+mod utils;
 
 fn main() -> Result<(), ExitFailure> {
     let args = cli::Args::get_from_clap()?;
