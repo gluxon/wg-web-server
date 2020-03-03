@@ -61,3 +61,65 @@ pub fn post_add(
     };
     status::Custom(Status::Ok, template)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::config::publickey::PublicKey;
+    use crate::launchpad;
+    use crate::states::WgState;
+    use failure;
+    use rocket::config::{Config, Environment};
+    use rocket::http::uri::Uri;
+    use rocket::http::{ContentType, Status};
+    use rocket::local::Client;
+    use rocket::Rocket;
+    use std::str::FromStr;
+    use wireguard_uapi::{DeviceInterface, WgSocket};
+
+    fn get_test_rocket() -> Result<Rocket, failure::Error> {
+        let interface_config = crate::config::Config {
+            name: "wgtest".to_owned(),
+            interface: crate::config::Interface::new()?,
+            peers: vec![],
+        };
+        let wgstate = WgState::init(interface_config)?;
+        wgstate.apply_config()?;
+
+        let config = Config::build(Environment::Development)
+            .extra(
+                "databases",
+                crate::db::make_rocket_database_config("./wgtest.sqlite3"),
+            )
+            .finalize()?;
+
+        Ok(launchpad::get_rocket(config, wgstate))
+    }
+
+    #[test]
+    fn add_peer() -> Result<(), failure::Error> {
+        let rocket = get_test_rocket()?;
+        let client = Client::new(rocket)?;
+
+        let public_key_base64 = "SwgTyJpz0og0NH/1YagZ2pWuaR06b0nlVUUo0WFdbAY=";
+        let public_key = PublicKey::from_str(public_key_base64)?;
+
+        let response = client
+            .post("/peers/add")
+            .header(ContentType::parse_flexible("application/x-www-form-urlencoded").unwrap())
+            .body(format!(
+                "public_key={}",
+                Uri::percent_encode(public_key_base64)
+            ))
+            .dispatch();
+        assert_eq!(response.status(), Status::Ok);
+
+        let mut wg = WgSocket::connect()?;
+        let device = wg.get_device(DeviceInterface::from_name("wgtest"))?;
+        assert!(device
+            .peers
+            .iter()
+            .any(|peer| &peer.public_key == public_key.as_bytes()));
+
+        Ok(())
+    }
+}
