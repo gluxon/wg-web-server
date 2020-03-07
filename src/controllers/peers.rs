@@ -110,7 +110,7 @@ mod tests {
 
         let response = client
             .post("/peers/add")
-            .header(ContentType::parse_flexible("application/x-www-form-urlencoded").unwrap())
+            .header(ContentType::Form)
             .body(format!(
                 "public_key={}",
                 Uri::percent_encode(public_key_base64)
