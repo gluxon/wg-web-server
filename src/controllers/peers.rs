@@ -42,7 +42,6 @@ pub fn post_add(
     let public_key = match add_peer.public_key {
         Ok(public_key) => public_key,
         Err(public_key_err) => {
-            println!("{}", public_key_err.input);
             let template = AddPeerTemplate {
                 public_key_err: Some(format!("{}", public_key_err.error)),
                 ..Default::default()
