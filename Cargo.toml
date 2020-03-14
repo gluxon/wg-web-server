@@ -40,6 +40,7 @@ features = ["diesel_sqlite_pool"]
 
 [dev-dependencies]
 assert_cmd = "0.12"
+mktemp = "0.4.0"
 predicates = "1"
 
 [features]

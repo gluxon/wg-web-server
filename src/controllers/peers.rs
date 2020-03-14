@@ -64,19 +64,22 @@ pub fn post_add(
 
 #[cfg(test)]
 mod tests {
-    use crate::config::publickey::PublicKey;
+    use crate::config::PublicKey;
+    use crate::db::make_rocket_database_config;
     use crate::launchpad;
     use crate::states::WgState;
     use failure;
+    use failure::format_err;
     use rocket::config::{Config, Environment};
     use rocket::http::uri::Uri;
     use rocket::http::{ContentType, Status};
     use rocket::local::Client;
     use rocket::Rocket;
+    use std::path::PathBuf;
     use std::str::FromStr;
     use wireguard_uapi::{DeviceInterface, WgSocket};
 
-    fn get_test_rocket() -> Result<Rocket, failure::Error> {
+    fn get_test_rocket(db_path_buf: PathBuf) -> Result<Rocket, failure::Error> {
         let interface_config = crate::config::Config {
             name: "wgtest".to_owned(),
             interface: crate::config::Interface::new()?,
@@ -85,11 +88,12 @@ mod tests {
         let wgstate = WgState::init(interface_config)?;
         wgstate.apply_config()?;
 
+        let db_path = db_path_buf
+            .into_os_string()
+            .into_string()
+            .map_err(|os_string| format_err!("Failed to convert OsString: {:?}", os_string))?;
         let config = Config::build(Environment::Development)
-            .extra(
-                "databases",
-                crate::db::make_rocket_database_config("./wgtest.sqlite3"),
-            )
+            .extra("databases", make_rocket_database_config(&db_path))
             .finalize()?;
 
         Ok(launchpad::get_rocket(config, wgstate))
@@ -97,7 +101,8 @@ mod tests {
 
     #[test]
     fn add_peer() -> Result<(), failure::Error> {
-        let rocket = get_test_rocket()?;
+        let db_file = mktemp::Temp::new_file()?;
+        let rocket = get_test_rocket(db_file.to_path_buf())?;
         let client = Client::new(rocket)?;
 
         let public_key_base64 = "SwgTyJpz0og0NH/1YagZ2pWuaR06b0nlVUUo0WFdbAY=";
