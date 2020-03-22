@@ -1,3 +1,4 @@
+use crate::impl_with_fromstr_with_error;
 use base64;
 use failure;
 use std::fmt;
@@ -26,6 +27,8 @@ impl FromStr for PresharedKey {
         Ok(Self(decoded))
     }
 }
+
+impl_with_fromstr_with_error!(PresharedKey);
 
 impl fmt::Display for PresharedKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

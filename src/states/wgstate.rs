@@ -1,7 +1,10 @@
+use crate::config;
 use crate::config::Config;
 use std::sync::{Mutex, MutexGuard};
 use wireguard_uapi::err::ConnectError;
 use wireguard_uapi::get::Device;
+use wireguard_uapi::set;
+use wireguard_uapi::set::WgPeerF;
 use wireguard_uapi::{DeviceInterface, RouteSocket, WgSocket};
 
 pub struct WgState {
@@ -79,9 +82,33 @@ impl WgState {
         Ok(device)
     }
 
-    pub fn add_peer(&self, public_key: &[u8; 32]) -> Result<(), failure::Error> {
+    pub fn add_peer(&self, config_peer: config::Peer) -> Result<(), failure::Error> {
         let mut guard = self.get_wg_socket_guard()?;
         let socket = &mut *guard;
+
+        let mut peer = set::Peer::from_public_key(config_peer.public_key.as_bytes())
+            .flags(vec![WgPeerF::ReplaceAllowedIps]);
+
+        if let Some(preshared_key) = &config_peer.preshared_key {
+            peer = peer.preshared_key(preshared_key.as_bytes());
+        }
+
+        peer = peer.allowed_ips(
+            config_peer
+                .allowed_ips
+                .0
+                .iter()
+                .map(|ip| ip.into())
+                .collect(),
+        );
+
+        if let Some(endpoint) = &config_peer.endpoint {
+            peer = peer.endpoint(endpoint);
+        }
+
+        if let Some(persistent_keepalive) = config_peer.persistent_keepalive {
+            peer = peer.persistent_keepalive_interval(persistent_keepalive);
+        }
 
         let device = wireguard_uapi::set::Device {
             interface: DeviceInterface::from_name(&self.interface_config.name),
@@ -89,7 +116,7 @@ impl WgState {
             private_key: None,
             listen_port: None,
             fwmark: None,
-            peers: vec![wireguard_uapi::set::Peer::from_public_key(public_key)],
+            peers: vec![peer],
         };
         socket.set_device(device)?;
 

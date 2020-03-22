@@ -5,6 +5,7 @@ use std::fmt;
 use std::str::FromStr;
 use x25519_dalek;
 
+#[derive(Clone)]
 pub struct PublicKey(x25519_dalek::PublicKey);
 
 impl PublicKey {

@@ -9,10 +9,27 @@
   <form action="/peers/add" method="post">
     <label>Public Key: <input name="public_key" size="48"></label>
     <br />
-    <input type="submit" value="Add Peer">
     {% match public_key_err %}
       {% when Some with (val) %}{{ val }}
       {% when None %}
     {% endmatch %}
+
+    <label>Pre-shared Key: <input name="preshared_key" size="48" /></label><br />
+    {% match preshared_key_err %} {% when Some with (val) %}{{ val }} {% when None
+    %} {% endmatch %}
+
+    <label>Allowed IPs: <input name="allowed_ips" /></label><br />
+    {% match allowed_ips_err %} {% when Some with (val) %}{{ val }} {% when None
+    %} {% endmatch %}
+
+    <label>Endpoint: <input name="endpoint" /></label><br />
+    {% match endpoint_err %} {% when Some with (val) %}{{ val }} {% when None %}
+    {% endmatch %}
+
+    <label>Persistent Keepalive <input name="persistent_keepalive" /></label><br />
+    {% match persistent_keepalive_err %} {% when Some with (val) %}{{ val }} {% when None %}
+    {% endmatch %}
+
+    <input type="submit" value="Add Peer">
   </form>
 {% endblock %}
