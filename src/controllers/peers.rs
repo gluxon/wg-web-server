@@ -4,6 +4,7 @@ use crate::config::{PresharedKey, PublicKey};
 use crate::lang;
 use crate::states::WgState;
 use crate::utils::FormInputResult;
+use crate::utils::FormOption;
 use askama::Template;
 use rocket::http::RawStr;
 use rocket::http::Status;
@@ -34,11 +35,11 @@ pub fn add() -> AddPeerTemplate<'static> {
 #[derive(FromForm)]
 pub struct AddPeer<'v> {
     public_key: FormInputResult<'v, PublicKey>,
-    preshared_key: FormInputResult<'v, PresharedKey>,
-    allowed_ips: FormInputResult<'v, AllowedIps>,
+    preshared_key: FormOption<FormInputResult<'v, PresharedKey>>,
+    allowed_ips: FormOption<FormInputResult<'v, AllowedIps>>,
     // TODO: Allow endpoint to also be a hostname
-    endpoint: Result<SocketAddr, &'v RawStr>,
-    persistent_keepalive: Result<u16, &'v RawStr>,
+    endpoint: FormOption<Result<SocketAddr, &'v RawStr>>,
+    persistent_keepalive: FormOption<Result<u16, &'v RawStr>>,
 }
 
 #[post("/add", data = "<form>")]
@@ -63,56 +64,60 @@ pub fn post_add(
         }
     };
 
-    let preshared_key = match add_peer.preshared_key {
-        Ok(preshared_key) => preshared_key,
-        Err(preshared_key_err) => {
+    let preshared_key = match add_peer.preshared_key.into() {
+        Some(Ok(preshared_key)) => Some(preshared_key),
+        Some(Err(preshared_key_err)) => {
             let template = AddPeerTemplate {
                 preshared_key_err: Some(format!("{}", preshared_key_err.error)),
                 ..Default::default()
             };
             return status::Custom(Status::BadRequest, template);
         }
+        None => None,
     };
 
-    let allowed_ips = match add_peer.allowed_ips {
-        Ok(allowed_ips) => allowed_ips,
-        Err(allowed_ips_err) => {
+    let allowed_ips = match add_peer.allowed_ips.into() {
+        Some(Ok(allowed_ips)) => allowed_ips,
+        Some(Err(allowed_ips_err)) => {
             let template = AddPeerTemplate {
                 allowed_ips_err: Some(format!("{}", allowed_ips_err.error)),
                 ..Default::default()
             };
             return status::Custom(Status::BadRequest, template);
         }
+        None => AllowedIps::new(),
     };
 
-    let endpoint = match add_peer.endpoint {
-        Ok(endpoint) => endpoint,
-        Err(_) => {
+    let endpoint = match add_peer.endpoint.into() {
+        Some(Ok(endpoint)) => Some(endpoint),
+        Some(Err(_)) => {
             let template = AddPeerTemplate {
                 endpoint_err: Some("huh".to_string()),
                 ..Default::default()
             };
             return status::Custom(Status::BadRequest, template);
         }
+        None => None,
     };
 
-    let persistent_keepalive = match add_peer.persistent_keepalive {
-        Ok(persistent_keepalive) => persistent_keepalive,
-        Err(_) => {
+    let persistent_keepalive = match add_peer.persistent_keepalive.into() {
+        Some(Ok(persistent_keepalive)) => Some(persistent_keepalive),
+        Some(Err(_)) => {
             let template = AddPeerTemplate {
                 persistent_keepalive_err: Some("huh".to_string()),
                 ..Default::default()
             };
             return status::Custom(Status::BadRequest, template);
         }
+        None => None,
     };
 
     let config_peer = config::Peer {
         public_key: public_key.clone(),
-        preshared_key: Some(preshared_key),
+        preshared_key,
         allowed_ips,
-        endpoint: Some(endpoint),
-        persistent_keepalive: Some(persistent_keepalive),
+        endpoint,
+        persistent_keepalive,
     };
 
     let add_peer_result = wg.add_peer(config_peer);
@@ -166,7 +171,7 @@ mod tests {
     }
 
     #[test]
-    fn add_peer_required_fields() -> Result<(), failure::Error> {
+    fn add_peer_with_only_public_key() -> Result<(), failure::Error> {
         let db_file = mktemp::Temp::new_file()?;
         let rocket = get_test_rocket(db_file.to_path_buf())?;
         let client = Client::new(rocket)?;
@@ -197,6 +202,40 @@ mod tests {
             "Failed to find new peer in {:#?}",
             device.peers
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn add_peer_with_whitespace_preshared_key() -> Result<(), failure::Error> {
+        let db_file = mktemp::Temp::new_file()?;
+        let rocket = get_test_rocket(db_file.to_path_buf())?;
+        let client = Client::new(rocket)?;
+
+        let public_key_input = "8h7VPAMcU7MsDEdq2lvjYhsHOHxx2sM5L4GM4xZT5hQ=";
+
+        let response = client
+            .post("/peers/add")
+            .header(ContentType::Form)
+            .body(format!(
+                "public_key={}&preshared_key={}",
+                Uri::percent_encode(public_key_input),
+                "   ",
+            ))
+            .dispatch();
+        assert_eq!(response.status(), Status::Ok);
+
+        let expected_public_key = PublicKey::from_str(public_key_input)?;
+
+        let mut wg = WgSocket::connect()?;
+        let device = wg.get_device(DeviceInterface::from_name("wgtest"))?;
+        let peer = device
+            .peers
+            .iter()
+            .find(|peer| &peer.public_key == expected_public_key.as_bytes())
+            .expect("Newly added peer not found");
+
+        assert_eq!(peer.preshared_key, [0u8; 32]);
 
         Ok(())
     }

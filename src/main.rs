@@ -1,4 +1,5 @@
 #![feature(proc_macro_hygiene, decl_macro)]
+#![feature(never_type)]
 
 use exitfailure::ExitFailure;
 
